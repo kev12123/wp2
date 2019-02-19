@@ -1,0 +1,17 @@
+html{ 
+   font-family:nusa;
+    margin: 0;
+    height: 100%;
+    background-image:url("ttt_pattern.png");
+    background-size:cover;
+  }
+
+  h1{
+	text-align:center;
+}
+
+h3{
+	text-align:center;
+}
+
+
