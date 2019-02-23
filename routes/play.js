@@ -4,6 +4,14 @@ var jsonParser = bodyParser.json();
 var urlEncodedParser = bodyParser.urlencoded({ extended: false});
 var router = express.Router();
 
+
+function resetGame(grid){
+        
+        grid.forEach(element => {
+                element = ' ';
+        });
+}
+
 router.get("/ttt",function(req,res){
         res.render("index");
 });
@@ -22,9 +30,14 @@ router.post("/ttt",urlEncodedParser,function(req,res){
 });
 
 router.post("/ttt/play/",jsonParser, function(req,res){
+        
+        var move = req.body.move;
+        var ttt_grid =[' ', ' ', ' ', ' ', ' ', ' ', ' ',' ',' '];
+        console.log("move made by human : " +  move);
+        if(typeof move !== 'undefined'){
  
-	var grid = req.body.grid;
-	var ttt_grid =[];
+        // var grid = req.body.grid;
+        // console.log(grid[0]);
 	var posCpuPlay ={
 		0 : [1,3,4],
 		1 : [0,2,3,4,5],
@@ -36,10 +49,13 @@ router.post("/ttt/play/",jsonParser, function(req,res){
 		7 : [3,4,5,6,8],
 		8 : [4,5,7]
 	};
-        grid.forEach(function(elem){
-                ttt_grid.push(elem);
-        });
+        // grid.forEach(function(elem){
+        //         ttt_grid.push(elem);
+        // });
+        //add human move position
+     
         var p1 = 'x';
+        ttt_grid[move] = p1;
         var p2 = 'o';
 
 	console.log(ttt_grid);
@@ -68,7 +84,7 @@ router.post("/ttt/play/",jsonParser, function(req,res){
                 ttt_grid[2]=== p1 && ttt_grid[5]===p1 && ttt_grid[8]===p1 ||
                 ttt_grid[0]=== p1 && ttt_grid[4]===p1 && ttt_grid[8]===p1 ||
                 ttt_grid[6]=== p1 && ttt_grid[4]===p1 && ttt_grid[2]===p1){
-
+                    resetGame(ttt_grid);
                     res.send({grid: ttt_grid, winner:p1});
 
          }
@@ -81,11 +97,17 @@ router.post("/ttt/play/",jsonParser, function(req,res){
                 ttt_grid[0]=== p2 && ttt_grid[4]===p2 && ttt_grid[8]===p2 ||
                 ttt_grid[6]=== p2 && ttt_grid[4]===p2 && ttt_grid[2]===p2){
                  
-		         console.log("winner:" + p2);
+                 console.log("winner:" + p2);
+                 resetGame(ttt_grid);
                  res.send({grid: ttt_grid, winner:p2});
          }else{ 
                 res.send({grid: ttt_grid,winner: ' '});
          }
+
+        }else{
+
+            res.send({grid: ttt_grid,winner: ' '});
+        }
 
 });
 module.exports = router;
