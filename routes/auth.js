@@ -1,16 +1,11 @@
 var express = require('express');
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
-var dataBase = require('../database.js');
+var User = require('../models/user.js');
 var jsonParser = bodyParser.json();
-var urlEncodedParser = bodyParser.urlencoded({ extended: true});
+var urlEncodedParser = bodyParser.urlencoded({ extended: false});
 var router = express.Router();
 
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://130.245.170.206:27017/wp2',{ useNewUrlParser: true });
 
-var db = mongoose.connection;
 
 var nodermailer = require('nodemailer');
 
@@ -29,14 +24,6 @@ let transporter = nodermailer.createTransport({
 
 
 
-db.on('error',console.error.bind(console,'connection error: '));
-
-db.once('open', function(){
-
-    console.log("we are connected");
-});
-
-
 router.get("/",function(req,res){
     
     res.render("signin");
@@ -46,6 +33,7 @@ router.get("/",function(req,res){
 
 router.post("/adduser", jsonParser, function(req,res){
     
+    console.log(res.body)
     var userName = req.body.username;
     var eMail = req.body.email;
     var passWord = req.body.password;
@@ -60,12 +48,12 @@ router.post("/adduser", jsonParser, function(req,res){
             validated: 0
         }
         
-    dataBase.User.create(user,function(err,user){
+    User.create(user,function(err,user){
 
         if(err){
             res.status(400).send();
         }else{
-            console.log("SUCESS----------user created");
+            console.log("SUCCESS----------user created");
             let HelperOptions = {
                 from: '"WP2 tic tac toe" <kevinngiraldo.com>',
                 to:"kevinngiraldo@gmail.com",
@@ -80,6 +68,9 @@ router.post("/adduser", jsonParser, function(req,res){
                 console.log("message was sent");
                 console.log(info);
             });
+
+            req.session.userId = user.id;
+            console.log(req.session.userId);
             res.status(201).send();
         }
     });
@@ -103,7 +94,7 @@ router.post("/verify",jsonParser,function(req,res){
 
     console.log("validating user ....");
 
-        dataBase.User.update(conditions, update, function(err,numOfUpdatedRecords){
+        User.update(conditions, update, function(err,numOfUpdatedRecords){
             
             if(err){
                 console.log("unable to update records");
@@ -141,7 +132,7 @@ router.get("/verify",urlEncodedParser,function(req,res){
 
     console.log("validating user ....");
 
-        dataBase.User.update(conditions, update, function(err,numOfUpdatedRecords){
+        User.update(conditions, update, function(err,numOfUpdatedRecords){
             
             if(err){
                 console.log("unable to update records");
@@ -172,7 +163,7 @@ router.post("/login",jsonParser,function(req,res){
     
       //check if user is validated
       console.log("checking if user is validated");
-      dataBase.User.find({ username: userName }, 'password validated', function (err, doc) {
+      User.find({ username: userName }, 'password validated', function (err, doc) {
           
         if(err){
             console.log("User does not exist");

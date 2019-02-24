@@ -12,20 +12,7 @@
     $('form').on('submit',makeRequest);
       function makeRequest(e){
         e.preventDefault();
-        $.ajax({
-          url:'/ttt/play',
-          type : 'POST',
-          success: function(data){
-            if(data.message){
-              $('div').html(data.message);
-            } else {
-              $('div').html('Sorry, an error occured');
-            }
-          },
-          error: function(){
-            $('div').html('Sorry, an error occurred');
-          }
-      });
+    
     }
   </script>
 <%include partials/footer  %>
