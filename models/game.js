@@ -5,7 +5,7 @@ var GameSchema = new Schema({
 
     games:[{
 
-        id: String,
+        id: {type: Number , default: 0},
         start_date: String,
         grid: Array,
         winner:String,

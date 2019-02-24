@@ -6,14 +6,11 @@ $(document).ready(function() {
     $(".grid-container div").each(function(pos) {
 
         $(this).on('click', function() {  
-
+                console.log($(this).text());
+            if($(this).text() === "" || $(this).text()=== " "){
                         console.log($(this).text());
                         $(this).text(p1);
-                        $(this).unbind("click");
                         var humanMove = pos;
-                        // grid_t[humanMove] = p1;
-                        pos += 1;
-
                         //ajax call
                         $.ajax({
                             url: '/ttt/play',
@@ -26,26 +23,34 @@ $(document).ready(function() {
                             contentType: "application/json",
                             success: function(data) {
                                 var g = data.grid;
-                                $('#result').text("Winner:" + data.winner);
-                                if (data.winner === " " || data.winner === "o") {
-                                    $(".grid-container div").each(function(i) {
-                                        $(this).text(g[i]);
-                                        
-                                        if(g[i]==='o'){
-                                             var test = "#item"+(i+1).toString();
-                                            $(test).unbind();
-                                        } 
-                                        i+=1;
-                            
-                                    });
-                                }
+                                console.log(g);
+                                if(data.winner === 'x' || data.winner === 'o'){
+                                    $('#result').text("Winner:" + data.winner);
+                                    $(".grid-container div").each(function(){
+                                        $(this).text(" ");
+                                    })
 
+                                    //set winner back to blank
+                                    setTimeout(function(){
+                                        $('#result').text("Winner:");
+                                      }, 800);
+
+                                }else if(data.winner){
+                                    $(".grid-container div").each(function(pos){
+                                        $(this).text(g[pos]);
+                                    })
+                                }
+                               
+                                
+                                
                             }
                         });
 
-
+                    }
                     
                 });
+
+            
             });
 
 });
