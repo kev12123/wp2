@@ -311,7 +311,7 @@ router.post("/verify",function(req,res){
             }
             else{
                 console.log("record successfully updated")
-                res.status(200).send();
+                res.send({status:"OK"});
             }
         });
 
