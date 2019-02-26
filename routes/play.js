@@ -166,7 +166,6 @@ router.post("/ttt/play/",function(req,res){
         
        
     }
-    serve_grid = [ 'x', 'o ', 'x', 'o', 'o', 'x', ' x', ' x', 'o' ]
     if(checkTie(p1,cpu)){
 
         var conditions = { userId: req.user._id}
