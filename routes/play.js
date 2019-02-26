@@ -230,11 +230,6 @@ router.post('/adduser',(req, res) => {
                         email,
                         password
                     });
-
-                    bcrypt.genSalt(10, (err, salt) => 
-                    bcrypt.hash(user.password,salt,(err,hash)=>{
-                      if(err) throw err;
-                      user.password = hash;
                       user.save()
                         .then(user =>{
 
@@ -267,9 +262,11 @@ router.post('/adduser',(req, res) => {
                         })
                         .catch(err => console.log(err));
     
-                }));
-                }
-            });
+                    }
+
+                });
+                
+          
 });
 
 router.post("/verify",function(req,res){
@@ -367,7 +364,7 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
 router.post("/login",redirectToTTT,(req,res,next)=>{
     console.log("logging in ");
     console.log(req.body.username + "USERNAMEEE");
-    User.findOne({username: req.body.username},'username validated', (err, user) => {
+    User.findOne({username: req.body.username},'username password validated', (err, user) => {
         console.log(user.validated);
             if(err) {
                 console.log(err);
@@ -382,7 +379,7 @@ router.post("/login",redirectToTTT,(req,res,next)=>{
                      //res.render("login",{message:"User doesnt exist"});
                      res.send({status:"ERROR"});
                 }
-                else if(user.validated ===1){
+                else if(user.validated ===1 &&req.body.password === user.password ){
                     console.log("Trying to login")
                     req.login(user, function(err) {
                         if (err) { return res.send({status: "ERROR"})}
