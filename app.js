@@ -1,10 +1,17 @@
-var express = require("express");
-var app = express();
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
-mongoose.connect('mongodb://130.245.170.206:27017/wp2',{ useNewUrlParser: true });
+
+const express = require("express"),
+      app = express(),
+      mongoose = require('mongoose'),
+      session = require('express-session'),
+      MongoStore = require('connect-mongo')(session),
+      passport = require('passport'),
+      bodyParser = require('body-parser');
+      cookieParser = require('cookie-parser');
+
+
+
+var DB  = require('./config/data').MongoConnString;      
+mongoose.connect(DB,{ useNewUrlParser: true });
 
 var db = mongoose.connection;
 
@@ -15,40 +22,33 @@ db.once('open', function(){
     console.log("we are connected");
 });
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+require('./config/passport')(passport);
 
-app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PATCH, DELETE, OPTIONS');
-    next();
-  });
-  
 
-const{
-    SESSION_LIFETIME = 1000*60*60*2,
-    SESSION_SECRET = 'ssh!quiet,it\'asecret!',
-    SESSION_NAME = 'sid'
-} = process.env;
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
 
 app.use(session({
-    name: SESSION_NAME,
-    store: new MongoStore({  mongooseConnection: db } ),
-    saveUninitialized: true,
-    resave: true,
-    secret: SESSION_SECRET,
-    cookie: { //http only by default
-        maxAge: SESSION_LIFETIME,
-        sameSite: true,
-        secure: false
-    },
-    unset: 'destroy'
-
+    secret: "secret",
+    saveUninitialized: false,
+    resave: false,
+    store: new MongoStore({ mongooseConnection: mongoose.connection })
 }));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.set("view engine", "ejs");
+
+
+app.use(function(req, res, next) {
+    if (!req.user)
+        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    next();
+});
 
 var routes = require('./routes/play');
 

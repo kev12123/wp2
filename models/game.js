@@ -2,15 +2,13 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var GameSchema = new Schema({
+    start_date: {type: Date, default: Date.now},
+    grid: Array,
+    winner:String,
+})
+var GamesSchema = new Schema({
 
-    games:[{
-
-        id: {type: Number , default: 0},
-        start_date: String,
-        grid: Array,
-        winner:String,
-
-    }],
+    game:[GameSchema],
     human: {type: Number , default: 0},
     wopr: {type: Number , default: 0},
     tie: {type: Number , default: 0},
@@ -18,5 +16,5 @@ var GameSchema = new Schema({
 
 });
 
-var Game = mongoose.model('Game',GameSchema);
+var Game = mongoose.model('Game',GamesSchema);
 module.exports = Game;

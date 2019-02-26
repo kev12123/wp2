@@ -5,8 +5,9 @@ var urlEncodedParser = bodyParser.urlencoded({ extended: true});
 var router = express.Router();
 var User = require('../models/user.js');
 var Game = require('../models/game.js');
+var passport = require('passport');
+const bcrypt = require('bcryptjs');
 var nodermailer = require('nodemailer');
-var user_session;
 
 //tiac-tac-toe board
 var serve_grid = [ ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' ];
@@ -62,9 +63,20 @@ function checkWinner(player){
 
 }
 
+function checkTie(p1,p2){
+     tie = true;
+    for(var i = 0 ; i < serve_grid.length; i++){
+        if(serve_grid[i]===" "){
+            return false;
+        }
+    }
+
+    return true;
+}
+
 var redirectToLogin = (req,resp,next)=>{
 
-    if(!req.session.userId){
+    if(!req.isAuthenticated()){
 
             resp.redirect('/login');
     }else{
@@ -74,7 +86,7 @@ var redirectToLogin = (req,resp,next)=>{
 
 var redirectToTTT = (req,resp,next)=>{
 
-        if(req.session.userId){
+        if(req.isAuthenticated()){
 
                 resp.redirect('/ttt');
         }else{
@@ -82,63 +94,15 @@ var redirectToTTT = (req,resp,next)=>{
         }
 };
 
-router.get("/ttt",redirectToLogin,function(req,res){
-        var date = new Date();
-	var curr_date = date.getFullYear() +"-0"+ (date.getMonth() +1) + "-" + date.getDate();
-        //deserialize user
-        console.log(req.session);
-        User.find({ _id: req.session.userId }, 'username', function (err, user) {
-                  
-                if(err){
-                    console.log("User does not exist");
-                    res.render("login",{message:"account has not been verified"});
-                }else{
-                    //check username and password
-                    console.log("Found user " + user[0]);
-                    if(typeof user[0].username  !== 'undefined'){
-                        
-                        res.render("ttt",{
-	
-                                name: user[0].username,
-                                date: curr_date
-                        
-                        });
-                    }
-                }
-                  
-               });
-});
+ 
 
-
-// router.post("/ttt",function(req,res){
-//         var date = new Date();
-// 	var curr_date = date.getFullYear() +"-0"+ (date.getMonth() +1) + "-" + date.getDate();
-//         //deserialize user
-//         User.find({ _id: req.session.userId }, 'username', function (err, user) {
-                  
-//                 if(err){
-//                     console.log("User does not exist");
-//                     res.render("login",{message:"account has not been verified"});
-//                 }else{
-//                     //check username and password
-//                     console.log("Found user " + user[0].username);
-//                     if(typeof user[0].username  !== 'undefined'){
-                        
-//                         res.render("ttt",{
-	
-//                                 name: user[0].username,
-//                                 date: curr_date
-                        
-//                         });
-//                     }
-//                 }
-                  
-//                });
-
+router.get("/ttt", redirectToLogin ,function(req,res){
      
-      
-// });
+    var date = new Date();
+	var curr_date = date.getFullYear() +"-0"+ (date.getMonth() +1) + "-" + date.getDate();
+    res.render("ttt",{ name: req.user.username,date: curr_date});
 
+});
 
 router.post("/ttt/play/",function(req,res){
     
@@ -148,7 +112,28 @@ router.post("/ttt/play/",function(req,res){
     serve_grid[move] = p1;
     console.log(serve_grid);
     console.log(move);
+
+   
+      
     if(checkWinner(p1) === true){
+        var conditions = { userId: req.user._id}
+        , update = { $push: { game: {grid: serve_grid , winner: p1} } , $inc: { human: 1 }}
+    
+    
+        console.log("adding game played ....");
+    
+            Game.update(conditions, update, function(err,numOfUpdatedRecords){
+                
+                if(err){
+                    console.log("unable to update records");
+                    res.status(400).send();
+                }
+                else{
+                    console.log("record successfully updated")
+                    res.status(200).send();
+                }
+            });
+    
         resetGame();
         return res.status(200).send({grid: serve_grid , winner: p1});
     }
@@ -158,54 +143,58 @@ router.post("/ttt/play/",function(req,res){
         cpuMove(move,cpu);
         if(checkWinner(cpu) === true){
             console.log("cpu wins !!! lol");
+            var conditions = { userId: req.user._id}
+            , update = { $push: { game: {grid: serve_grid , winner: cpu} } , $inc: { wopr: 1 }}
+        
+        
+            console.log("adding game played ....");
+        
+                Game.update(conditions, update, function(err,numOfUpdatedRecords){
+                    
+                    if(err){
+                        console.log("unable to update records");
+                        res.status(400).send();
+                    }
+                    else{
+                        console.log("record successfully updated")
+                        res.status(200).send();
+                    }
+                });
             resetGame();
             return res.status(200).send({grid: serve_grid , winner: cpu});
         }
         
        
     }
+    serve_grid = [ 'x', 'o ', 'x', 'o', 'o', 'x', ' x', ' x', 'o' ]
+    if(checkTie(p1,cpu)){
+
+        var conditions = { userId: req.user._id}
+        , update = { $push: { game: {grid: serve_grid , winner: " "} } , $inc: { tie: 1 }}
+    
+    
+        console.log("adding game played ....");
+    
+            Game.update(conditions, update, function(err,numOfUpdatedRecords){
+                
+                if(err){
+                    console.log("unable to update records");
+                    res.status(400).send();
+                }
+                else{
+                    console.log("record successfully updated")
+                    res.status(200).send();
+                }
+            });
+    
+        resetGame();
+        return res.status(200).send({grid: serve_grid , winner: " "});
+
+    }
     return res.status(200).send({grid: serve_grid , winner: " "});
     
-    
-
-    // var ttt_grid = new Array(8);
-    // console.log("Start");
-    // if(typeof move !== 'undefined'){
-
-    //     var posCpuPlay ={
-    //         0 : [1,3,4],
-    //         1 : [0,2,3,4,5],
-    //         2 : [1,4,5],
-    //         3 : [0,1,4,6,7],
-    //         4 : [0,1,2,3,5,6,7,8],
-    //         5 : [1,2,4,7,8],
-    //         6 : [3,4,7],
-    //         7 : [3,4,5,6,8],
-    //         8 : [4,5,7]
-    //     };
-   
-    //     var p1 = 'x';
-    //     var p2 = 'o';
-    //     //add human move position
-    //     ttt_grid[move] = p1;
-    //     console.log("move made by human : " +  move);
-    //     console.log(ttt_grid);
-
-    //     //tic tac toe logic
-    //     if(checkWinner(p1,ttt_grid)===true){
-    //             console.log("checking winner");
-    //             console.log(ttt_grid);
-    //             res.status(200);
-    //             return res.send({grid: resetGame(ttt_grid), winner: p1});
-    //        }
-    //     }else{  
-    //              console.log("no winner");
-    //              res.status(200);
-    //              return res.send({grid: ttt_grid , winner: " "});
-    //     }
 
 });
-
 
 let transporter = nodermailer.createTransport({
     service: 'Gmail',
@@ -225,52 +214,63 @@ router.get("/",function(req,res){
     res.render("signin");
 });
 
-router.post("/adduser",(req,res)=>{
+router.post('/adduser',(req, res) => {
+    const {username, email , password} = req.body;
     
-    var userName = req.body.username;
-    var eMail = req.body.email;
-    var passWord = req.body.password;
+    console.log("username:" + username + "email:" + email+ "password:" + password);
+    //Creates and saves a new user with a salt and hashed password
+    User.findOne({username: username})
+            .then(user=>{
+                if(user){
+                    errors.push("Email/username already taken")
+                    res.render('register',{errors,username,email,password})
+                }else{
+
+                    const user = new User({
+                        username,
+                        email,
+                        password
+                    });
+
+                    bcrypt.genSalt(10, (err, salt) => 
+                    bcrypt.hash(user.password,salt,(err,hash)=>{
+                      if(err) throw err;
+                      user.password = hash;
+                      user.save()
+                        .then(user =>{
+
+                            games= new Game({
+                                userId : user._id
+                            });
+                            games.save((err,games)=>{
+                                if(err){
+                                    console.log(err);
+                                }
+                                console.log("game rec created " +  games)
+                            });
+                        console.log("SUCCESS----------user created");
+                        let HelperOptions = {
+                            from: '"WP2 tic tac toe" <kevinngiraldo.com>',
+                            to: email,
+                            subject: "Verify email for tic-tac-toe",
+                            html: "<p><a href='http://localhost:3000/verify?email="+ email +"&key=abracadabra'> verify with following link </a></p>"
+                        }
+
+                        transporter.sendMail(HelperOptions,(err,info) => {
+                            if(err){
+                                console.log(err);
+                            }
+                            console.log("message was sent");
+                            console.log(info);
+                        });
+                            res.redirect('/login')
+                        })
+                        .catch(err => console.log(err));
     
-
-    console.log(req.session);
-    console.log("username:" + userName + "email:" + eMail+ "password:" + passWord);
-
-
-        var user = {
-            username: userName,
-            email: eMail,
-            password: passWord,
-            validated: 0
-        }
-        
-    User.create(user,function(err,user){
-
-        if(err){
-            res.status(400).redirect("/");
-        }else{
-            console.log("SUCCESS----------user created");
-            let HelperOptions = {
-                from: '"WP2 tic tac toe" <kevinngiraldo.com>',
-                to: eMail,
-                subject: "Verify email for tic-tac-toe",
-                html: "<p><a href='http://localhost:3000/verify?email=rerree@fdfdf.com&key=abracadabra'> verify with following link </a></p>"
-            }
-
-            transporter.sendMail(HelperOptions,(err,info) => {
-                if(err){
-                    console.log(err);
+                }));
                 }
-                console.log("message was sent");
-                console.log(info);
             });
-
-      
-            return res.redirect("/login");
-        }
-    });
-  
 });
-
 
 router.post("/verify",function(req,res){
     
@@ -289,12 +289,29 @@ router.post("/verify",function(req,res){
         User.update(conditions, update, function(err,numOfUpdatedRecords){
             
             if(err){
+                console.log("unable to update records"); var conditions = { email: email_u}
+    , update = { $set: { validated: 1 }}
+
+
+    console.log("validating user ....");
+
+        User.update(conditions, update, function(err,numOfUpdatedRecords){
+            
+            if(err){
                 console.log("unable to update records");
                 res.status(400).send();
             }
             else{
                 console.log("record successfully updated")
-                res.status(201).send();
+                res.status(200).send();
+            }
+        });
+
+                res.status(400).send();
+            }
+            else{
+                console.log("record successfully updated")
+                res.status(200).send();
             }
         });
 
@@ -318,7 +335,7 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
 
     if(key === "abracadabra"){
 
-        var conditions = { email: email_u}
+    var conditions = { email: email_u}
     , update = { $set: { validated: 1 }}
 
 
@@ -345,85 +362,91 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
     }
 });
 
-
-
-router.post("/login",urlEncodedParser,function(req,res){
-        console.log("login route......");
-        var userName = req.body.username;
-        user_session = req.body.username;
-        var passWord = req.body.password;
-        console.log(userName);
-        console.log(passWord);
-        if(typeof userName !== 'undefined' && typeof passWord !== 'undefined'){
-           //check if user is validated
-           console.log("checking if user is validated");
-           User.find({ username: userName }, 'password validated _id', function (err, user) {
-                  
-             if(err){
-                 console.log("User does not exist");
-                 res.render("login",{message:"account has not been verified"});
-             }else{
-                 //check username and password
-                 if(user[0].password===passWord && user[0].validated===1){
-                        req.session.userId = user[0]._id;
-                        console.log(req.session);
-                        // var date = new Date();
-                        // var curr_date = date.getFullYear() +"-0"+ (date.getMonth() +1) + "-" + date.getDate();
-                        // res.render("ttt",{
-	
-                        //         name: userName,
-                        //         date: curr_date
-                        
-                        // });
-                        //add game to database
-                    
+router.post("/login",redirectToTTT,(req,res,next)=>{
     
-                        
-                 }else{
-                       
-                      
-                 }
-
-                 return res.redirect("/ttt");
-                  
-             }
+    console.log(req.body.username);
+    User.findOne({username: req.body.username},'username validated', (err, user) => {
+        console.log(user.validated);
+            if(err) {
+                console.log(err);
+                console.log("user doesnt exist");
+                res.render("login",{message:"User does not exist"});
+            }
+            else{
+                 console.log(user.validated);
+                if(user===null){
+                    console.log(user);
+                     res.status(400);
+                     res.render("login",{message:"User doesnt exist"});
+                }
+                else if(user.validated ===1){
+                    console.log("Trying to login")
+                    passport.authenticate('local',{
+                        successRedirect: "/ttt",
+                        failureRedirect: "/login",
+                    })(req,res,next);
+                }
                
-            });
-        }
+            }
+        });
+    
 });
-
 
 
 router.get("/login", redirectToTTT,function(req,res){
+  res.status(200);
   res.render("login",{message:""});
 });
 
-router.get("/logout", function(req,res){
-    console.log("hereeeee");
-    console.log(user_session);
+router.get("/logout",redirectToLogin,(req,res)=>{
 
-    User.find({ username: "talendo" }, 'password validated _id', function (err, user) {
-                  
-        if(err){
-            console.log("User does not exist");
-            res.render("login",{message:"account has not been verified"});
-        }else{
-            //check username and password
-            
-                   req.session.userId = user[0]._id;
-                   console.log(req.session);
-                   req.session.destroy((err)=>{
-                       if(err){
-                           console.log(err);
-                       }else{
-                           return res.redirect("/login");
-                       }
-                   });
-                 
-  
-        }
-          
-       });
-   
+     req.logout();
+     req.session.destroy();
+     res.redirect("/login");
 });
+   
+router.post("/logout",(req,res)=>{
+     req.logout();
+    req.session.destroy();
+    res.redirect("/login");
+});
+
+router.post("/listgames",(req,res)=>{
+    console.log(req.isAuthenticated());
+   //query to list all games for current user
+    Game.find({userId: req.user._id}, function (err, docs) {
+        if(err){
+             res.status(400).send();
+            }else{
+                res.status(200).send({status:"OK",games: docs[0].game});
+            }
+        });
+
+});
+
+router.post("/getgame",(req,res)=>{
+    //query to get game based of id
+    var id = req.body.id;
+    Game.find({'game._id' : id} ,{'game.$': 1}, function (err, games) {
+
+        if(err){
+            res.status(400).send();
+        }else{
+            res.status(200).send({status:"OK",grid:games[0].game[0].grid ,winner:games[0].game[0].winner});
+        }
+   });
+ });
+ 
+ router.post("/getscore",(req,res)=>{
+     //query to get score of human vs cpu
+     Game.find({userId: req.user._id}, function (err, game) {
+        if(err){
+            res.status(400).send();
+        }else{
+            res.status(200).send({status:"OK",human: game[0].human , wopr: game[0].wopr , tie: game[0].tie});
+        }
+   });
+ });
+    
+
 module.exports = router;

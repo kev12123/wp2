@@ -1,7 +1,8 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose'),
+    passportLocalMongoose = require('passport-local-mongoose');
 
 
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 var validateEmail = function(email){
 
@@ -44,5 +45,7 @@ var UserSchema = new Schema({
 
 });
 
+UserSchema.plugin(passportLocalMongoose);
 var User = mongoose.model('User',UserSchema);
+
 module.exports = User;
