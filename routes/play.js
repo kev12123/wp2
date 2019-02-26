@@ -319,7 +319,7 @@ router.post("/verify",function(req,res){
     }
     else{
 
-        res.status(400).send();
+        res.send({status:"ERROR"});
 
     }
 });
@@ -359,7 +359,7 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
     }
     else{
 
-        res.status(400).send();
+        res.send({status:"ERROR"});
 
     }
 });
