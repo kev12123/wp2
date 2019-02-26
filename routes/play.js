@@ -106,6 +106,10 @@ router.get("/ttt", redirectToLogin ,function(req,res){
 
 router.post("/ttt/play/",function(req,res){
     
+    if(!req.isAuthenticated()){
+        res.send({status: "ERROR"});
+    }
+    else{
     var p1 = 'X';
     var cpu ='O';
     var move = req.body.move;
@@ -198,7 +202,7 @@ router.post("/ttt/play/",function(req,res){
     }
     return res.status(200).send({grid: serve_grid , winner: " "});
 }
-
+    }
 });
 
 let transporter = nodermailer.createTransport({
