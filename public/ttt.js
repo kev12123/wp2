@@ -1,6 +1,6 @@
 
 
-var p1 = "x";
+var p1 = "X";
 // var grid_t = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
 $(document).ready(function() {
     $(".grid-container div").each(function(pos) {
@@ -24,7 +24,7 @@ $(document).ready(function() {
                             success: function(data) {
                                 var g = data.grid;
                                 console.log(g);
-                                if(data.winner === 'x' || data.winner === 'o'){
+                                if(data.winner === 'X' || data.winner === 'O'){
                                     $('#result').text("Winner:" + data.winner);
                                     $(".grid-container div").each(function(){
                                         $(this).text(" ");

@@ -106,8 +106,8 @@ router.get("/ttt", redirectToLogin ,function(req,res){
 
 router.post("/ttt/play/",function(req,res){
     
-    var p1 = 'x';
-    var cpu ='o';
+    var p1 = 'X';
+    var cpu ='O';
     var move = req.body.move;
     serve_grid[move] = p1;
     console.log(serve_grid);
