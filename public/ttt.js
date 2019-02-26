@@ -1,6 +1,6 @@
 
 
-var p1 = "X";
+var p1 = "x";
 // var grid_t = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
 $(document).ready(function() {
     $(".grid-container div").each(function(pos) {

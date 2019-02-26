@@ -133,14 +133,15 @@ router.post("/ttt/play/",function(req,res){
                     res.status(200).send();
                 }
             });
-    
+        var prev_grid = serve_grid.slice();
         resetGame();
-        return res.status(200).send({grid: serve_grid , winner: p1});
+        return res.status(200).send({grid: prev_grid , winner: p1});
     }
     else {
         console.log("cpu making move ...");
         console.log("cpu making move ...");
         cpuMove(move,cpu);
+        console.log(serve_grid)
         if(checkWinner(cpu) === true){
             console.log("cpu wins !!! lol");
             var conditions = { userId: req.user._id}
@@ -160,8 +161,10 @@ router.post("/ttt/play/",function(req,res){
                         res.status(200).send();
                     }
                 });
+            var prev_grid = serve_grid.slice();
             resetGame();
-            return res.status(200).send({grid: serve_grid , winner: cpu});
+            return res.status(200).send({grid: prev_grid , winner: cpu});
+           
         }
         
        
@@ -185,9 +188,9 @@ router.post("/ttt/play/",function(req,res){
                     res.status(200).send();
                 }
             });
-    
-        resetGame();
-        return res.status(200).send({grid: serve_grid , winner: " "});
+            var prev_grid = serve_grid.slice();
+            resetGame();
+        return res.status(200).send({grid: prev_grid , winner: " "});
 
     }
     return res.status(200).send({grid: serve_grid , winner: " "});
@@ -206,6 +209,13 @@ let transporter = nodermailer.createTransport({
     tls: {
         rejectUnathorized: false
     }
+});
+
+
+router.get("/reset",(req,res)=>{
+    resetGame();
+    console.log("grid reset" + serve_grid);
+    res.send({"status": "ok"})
 });
 
 router.get("/",function(req,res){
