@@ -122,23 +122,7 @@ router.post("/ttt/play/",function(req,res){
         return res.status(200).send({grid: serve_grid , winner: " "});
 
     }else{
-        var conditions = { userId: req.user._id}
-        , update = { $push: { game: {grid: serve_grid , winner: " "} } , $inc: { tie: 1 }}
-    
-    
-        console.log("adding game played ....");
-    
-            Game.update(conditions, update, function(err,numOfUpdatedRecords){
-                
-                if(err){
-                    console.log("unable to update records");
-                    res.status(400).send();
-                }
-                else{
-                    console.log("record successfully updated")
-                    res.status(200).send();
-                }
-            });
+
     if(checkWinner(p1) === true){
         var conditions = { userId: req.user._id}
         , update = { $push: { game: {grid: serve_grid , winner: p1} } , $inc: { human: 1 }}
@@ -166,23 +150,6 @@ router.post("/ttt/play/",function(req,res){
         console.log("cpu making move ...");
         cpuMove(move,cpu);
         console.log(serve_grid)
-        var conditions = { userId: req.user._id}
-        , update = { $push: { game: {grid: serve_grid , winner: " "} } , $inc: { tie: 1 }}
-    
-    
-        console.log("adding game played ....");
-    
-            Game.update(conditions, update, function(err,numOfUpdatedRecords){
-                
-                if(err){
-                    console.log("unable to update records");
-                    res.status(400).send();
-                }
-                else{
-                    console.log("record successfully updated")
-                    res.status(200).send();
-                }
-            });
         if(checkWinner(cpu) === true){
             console.log("cpu wins !!! lol");
             var conditions = { userId: req.user._id}
@@ -473,7 +440,12 @@ router.post("/listgames",(req,res)=>{
         if(err){
              res.status(400).send();
             }else{
-                res.status(200).send({status:"OK",games: docs[0].game});
+                var games = docs[0].game;
+                var gamesRespArr = new Array();
+                for(var i = 0 ; i < games.length ; i++){
+                     gamesRespArr.push({start_date: games[i].start_date, id:games[i].id});
+                }
+                res.status(200).send({status:"OK",games:gamesRespArr});
             }
         });
 
