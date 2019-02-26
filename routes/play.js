@@ -222,8 +222,7 @@ router.post('/adduser',(req, res) => {
     User.findOne({username: username})
             .then(user=>{
                 if(user){
-                    errors.push("Email/username already taken")
-                    res.render('register',{errors,username,email,password})
+                  res.send({Status: "ERRROR"});
                 }else{
 
                     const user = new User({
@@ -363,7 +362,7 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
 });
 
 router.post("/login",redirectToTTT,(req,res,next)=>{
-    
+    console.log("logging in ");
     console.log(req.body.username);
     User.findOne({username: req.body.username},'username validated', (err, user) => {
         console.log(user.validated);
