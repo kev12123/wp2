@@ -114,7 +114,10 @@ router.post("/ttt/play/",function(req,res){
     console.log(move);
 
    
-      
+    if(move === null){
+        return res.status(200).send({grid: serve_grid , winner: " "});
+
+    }else{
     if(checkWinner(p1) === true){
         var conditions = { userId: req.user._id}
         , update = { $push: { game: {grid: serve_grid , winner: p1} } , $inc: { human: 1 }}
@@ -194,7 +197,7 @@ router.post("/ttt/play/",function(req,res){
 
     }
     return res.status(200).send({grid: serve_grid , winner: " "});
-    
+}
 
 });
 
