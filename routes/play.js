@@ -388,6 +388,9 @@ router.post("/login",redirectToTTT,(req,res,next)=>{
                         if (err) { return next(err); }
                         return res.send({status: "OK"});
                       });
+                }else{
+
+                    return res.send({status: "ERROR"});
                 }
                
             }
