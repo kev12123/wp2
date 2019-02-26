@@ -40,7 +40,7 @@ var UserSchema = new Schema({
             validate: [validateEmail, 'Please enter a valid email']
     },
     validated:{
-        type: Number
+        type: Number , default: 0
     }
 
 });
