@@ -415,7 +415,8 @@ router.get("/logout",redirectToLogin,(req,res)=>{
 router.post("/logout",(req,res)=>{
      req.logout();
     req.session.destroy();
-    res.redirect("/login");
+    res.send({status:"OK"});
+    //res.redirect("/login");
 });
 
 router.post("/listgames",(req,res)=>{
