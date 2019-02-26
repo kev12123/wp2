@@ -261,8 +261,9 @@ router.post('/adduser',(req, res) => {
                             }
                             console.log("message was sent");
                             console.log(info);
-                        });
-                            res.redirect('/login')
+                        });  
+                           
+                            res.send({status:"OK"});
                         })
                         .catch(err => console.log(err));
     
@@ -298,11 +299,11 @@ router.post("/verify",function(req,res){
             
             if(err){
                 console.log("unable to update records");
-                res.status(400).send();
+                res.send({status:"ERROR"});
             }
             else{
                 console.log("record successfully updated")
-                res.status(200).send();
+                res.send({status:"OK"});
             }
         });
 
@@ -344,11 +345,13 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
             
             if(err){
                 console.log("unable to update records");
-                res.status(400).send();
+                //res.status(400).send();
+                res.send({status:"ERROR"});
             }
             else{
                 console.log("record successfully updated")
-                return res.status(201).redirect("/login");
+            ;
+                //return res.status(201).redirect("/login");
             }
         });
 
@@ -363,7 +366,7 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
 
 router.post("/login",redirectToTTT,(req,res,next)=>{
     console.log("logging in ");
-    console.log(req.body.username);
+    console.log(req.body.username + "USERNAMEEE");
     User.findOne({username: req.body.username},'username validated', (err, user) => {
         console.log(user.validated);
             if(err) {
@@ -375,15 +378,16 @@ router.post("/login",redirectToTTT,(req,res,next)=>{
                  console.log(user.validated);
                 if(user===null){
                     console.log(user);
-                     res.status(400);
-                     res.render("login",{message:"User doesnt exist"});
+                     //res.status(400);
+                     //res.render("login",{message:"User doesnt exist"});
+                     res.send({status:"ERROR"});
                 }
                 else if(user.validated ===1){
                     console.log("Trying to login")
-                    passport.authenticate('local',{
-                        successRedirect: "/ttt",
-                        failureRedirect: "/login",
-                    })(req,res,next);
+                    req.login(user, function(err) {
+                        if (err) { return next(err); }
+                        return res.send({status: "OK"});
+                      });
                 }
                
             }
@@ -401,7 +405,8 @@ router.get("/logout",redirectToLogin,(req,res)=>{
 
      req.logout();
      req.session.destroy();
-     res.redirect("/login");
+     res.send({status:"OK"});
+     //res.redirect("/login");
 });
    
 router.post("/logout",(req,res)=>{
