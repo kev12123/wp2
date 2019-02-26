@@ -385,7 +385,7 @@ router.post("/login",redirectToTTT,(req,res,next)=>{
                 else if(user.validated ===1){
                     console.log("Trying to login")
                     req.login(user, function(err) {
-                        if (err) { return next(err); }
+                        if (err) { return res.send({status: "ERROR"})}
                         return res.send({status: "OK"});
                       });
                 }else{
