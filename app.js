@@ -8,8 +8,6 @@ const express = require("express"),
       bodyParser = require('body-parser');
       cookieParser = require('cookie-parser');
 
-
-
 var DB  = require('./config/data').MongoConnString;      
 mongoose.connect(DB,{ useNewUrlParser: true });
 

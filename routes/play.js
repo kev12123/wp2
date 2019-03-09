@@ -8,71 +8,8 @@ var Game = require('../models/game.js');
 var passport = require('passport');
 const bcrypt = require('bcryptjs');
 var nodermailer = require('nodemailer');
+var ttt = require('../Utils/ttt');
 
-//tiac-tac-toe board
-var serve_grid = [ ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' ];
-
-//limiting possible moves a cpu can make 
-var posCpuPlay ={
-    0 : [1,3,4],
-    1 : [0,2,3,4,5],
-    2 : [1,4,5],
-    3 : [0,1,4,6,7],
-    4 : [0,1,2,3,5,6,7,8],
-    5 : [1,2,4,7,8],
-    6 : [3,4,7],
-    7 : [3,4,5,6,8],
-    8 : [4,5,7]
-};
-
-
-function resetGame(){
-    for(var i = 0 ; i < serve_grid.length ; i++){
-        serve_grid[i] = ' ';
-    }
-}
-
-function cpuMove(humanMove,p2){
-      for(var i = 0 ; i < serve_grid.length ; i++){  
-            if(serve_grid[i]===" " && i !=humanMove){
-                serve_grid[i] = p2;
-                break;
-            }
-      }
-
-}
-
- 
-function checkWinner(player){
-
-    if (serve_grid[0] === player && serve_grid[1] === player && serve_grid[2] === player ||
-        serve_grid[3] === player && serve_grid[4] === player && serve_grid[5] === player ||
-        serve_grid[6] === player && serve_grid[7] === player && serve_grid[8] === player ||
-        serve_grid[0] === player && serve_grid[3] === player && serve_grid[6] === player ||
-        serve_grid[1] === player && serve_grid[4] === player && serve_grid[7] === player ||
-        serve_grid[2] === player && serve_grid[5] === player && serve_grid[8] === player ||
-        serve_grid[0] === player && serve_grid[4] === player && serve_grid[8] === player ||
-        serve_grid[6] === player && serve_grid[4] === player && serve_grid[2] === player){
-         
-        return true;
-  }
-  else{
-
-        return false;
-  }
-
-}
-
-function checkTie(p1,p2){
-     tie = true;
-    for(var i = 0 ; i < serve_grid.length; i++){
-        if(serve_grid[i]===" "){
-            return false;
-        }
-    }
-
-    return true;
-}
 
 var redirectToLogin = (req,resp,next)=>{
 
@@ -94,7 +31,6 @@ var redirectToTTT = (req,resp,next)=>{
         }
 };
 
- 
 
 router.get("/ttt", redirectToLogin ,function(req,res){
      
@@ -113,19 +49,19 @@ router.post("/ttt/play/",function(req,res){
     var p1 = 'X';
     var cpu ='O';
     var move = req.body.move;
-    serve_grid[move] = p1;
-    console.log(serve_grid);
+    ttt.serve_grid[move] = p1;
+    console.log(ttt.serve_grid);
     console.log(move);
 
    
     if(move === null){
-        return res.status(200).send({grid: serve_grid , winner: " "});
+        return res.status(200).send({grid: ttt.serve_grid , winner: " "});
 
     }else{
 
-    if(checkWinner(p1) === true){
+    if(ttt.checkWinner(p1) === true){
         var conditions = { userId: req.user._id}
-        , update = { $push: { game: {grid: serve_grid , winner: p1} } , $inc: { human: 1 }}
+        , update = { $push: { game: {grid: ttt.serve_grid , winner: p1} } , $inc: { human: 1 }}
     
     
         console.log("adding game played ....");
@@ -141,19 +77,19 @@ router.post("/ttt/play/",function(req,res){
                     res.status(200).send();
                 }
             });
-        var prev_grid = serve_grid.slice();
-        resetGame();
+        var prev_grid = ttt.serve_grid.slice();
+        ttt.resetGame();
         return res.status(200).send({grid: prev_grid , winner: p1});
     }
     else {
         console.log("cpu making move ...");
         console.log("cpu making move ...");
-        cpuMove(move,cpu);
-        console.log(serve_grid)
-        if(checkWinner(cpu) === true){
+        ttt.cpuMove(move,cpu);
+        console.log(ttt.serve_grid)
+        if(ttt.checkWinner(cpu) === true){
             console.log("cpu wins !!! lol");
             var conditions = { userId: req.user._id}
-            , update = { $push: { game: {grid: serve_grid , winner: cpu} } , $inc: { wopr: 1 }}
+            , update = { $push: { game: {grid: ttt.serve_grid , winner: cpu} } , $inc: { wopr: 1 }}
         
         
             console.log("adding game played ....");
@@ -169,18 +105,18 @@ router.post("/ttt/play/",function(req,res){
                         res.status(200).send();
                     }
                 });
-            var prev_grid = serve_grid.slice();
-            resetGame();
+            var prev_grid = ttt.serve_grid.slice();
+            ttt.resetGame();
             return res.status(200).send({grid: prev_grid , winner: cpu});
            
         }
         
        
     }
-    if(checkTie(p1,cpu)){
+    if(ttt.checkTie(p1,cpu)){
 
         var conditions = { userId: req.user._id}
-        , update = { $push: { game: {grid: serve_grid , winner: " "} } , $inc: { tie: 1 }}
+        , update = { $push: { game: {grid: ttt.serve_grid , winner: " "} } , $inc: { tie: 1 }}
     
     
         console.log("adding game played ....");
@@ -196,12 +132,12 @@ router.post("/ttt/play/",function(req,res){
                     res.status(200).send();
                 }
             });
-            var prev_grid = serve_grid.slice();
-            resetGame();
+            var prev_grid = ttt.serve_grid.slice();
+            ttt.resetGame();
         return res.status(200).send({grid: prev_grid , winner: " "});
 
     }
-    return res.status(200).send({grid: serve_grid , winner: " "});
+    return res.status(200).send({grid: ttt.serve_grid , winner: " "});
 }
     }
 });
@@ -221,14 +157,13 @@ let transporter = nodermailer.createTransport({
 
 
 router.get("/reset",(req,res)=>{
-    resetGame();
-    console.log("grid reset" + serve_grid);
+    ttt.resetGame();
+    console.log("grid reset" + ttt.serve_grid);
     res.send({"status": "ok"})
 });
 
 router.get("/",function(req,res){
-    
-    res.render("signin");
+    return res.render("signin",{message: ""});
 });
 
 router.post('/adduser',(req, res) => {
@@ -239,14 +174,23 @@ router.post('/adduser',(req, res) => {
     User.findOne({username: username})
             .then(user=>{
                 if(user){
-                  res.send({Status: "ERRROR"});
+                  return res.status(409).render("signin",{message:"Username already taken"})
                 }else{
+
+                    bcrypt.genSalt(10)
+                        .then(salt=>{
+                            return bcrypt.hash(password,salt)
+                        })
+                        .then(hash=>{
+                            password = hash;
+                        })
 
                     const user = new User({
                         username,
                         email,
                         password
                     });
+                    console.log(password);
                       user.save()
                         .then(user =>{
 
@@ -264,7 +208,7 @@ router.post('/adduser',(req, res) => {
                             from: '"WP2 tic tac toe" <kevinngiraldo.com>',
                             to: email,
                             subject: "Verify email for tic-tac-toe",
-                            html: "<p><a href='http://localhost:3000/verify?email="+ email +"&key=abracadabra'> verify with following link </a></p>"
+                            html: "<p><a href='http://130.245.170.206:80/verify?email="+ email +"&key=abracadabra'> verify with following link </a></p>"
                         }
 
                         transporter.sendMail(HelperOptions,(err,info) => {
@@ -275,7 +219,8 @@ router.post('/adduser',(req, res) => {
                             console.log(info);
                         });  
                            
-                            res.send({status:"OK"});
+                            res.status(200).redirect("/login");
+                            // res.send({status:"OK"});
                         })
                         .catch(err => console.log(err));
     
@@ -359,13 +304,12 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
             
             if(err){
                 console.log("unable to update records");
-                //res.status(400).send();
-                res.send({status:"ERROR"});
+                res.status(400).send();
+                // res.send({status:"ERROR"});
             }
             else{
                 console.log("record successfully updated")
-            ;
-                //return res.status(201).redirect("/login");
+                return res.status(201).redirect("/login");
             }
         });
 
@@ -373,7 +317,8 @@ router.get("/verify", redirectToTTT, urlEncodedParser,function(req,res){
     }
     else{
 
-        res.send({status:"ERROR"});
+        res.status(400).send();
+        // res.send({status:"ERROR"});
 
     }
 });
@@ -392,15 +337,15 @@ router.post("/login",redirectToTTT,(req,res,next)=>{
                  console.log(user.validated);
                 if(user===null){
                     console.log(user);
-                     //res.status(400);
-                     //res.render("login",{message:"User doesnt exist"});
-                     res.send({status:"ERROR"});
+                    res.status(400).render("login",{message:"User doesnt exist"});
+                    //  res.send({status:"ERROR"});
                 }
                 else if(user.validated ===1 &&req.body.password === user.password ){
                     console.log("Trying to login")
                     req.login(user, function(err) {
                         if (err) { return res.send({status: "ERROR"})}
-                        return res.send({status: "OK"});
+                        // return res.send({status: "OK"});
+                        return res.status(200).redirect("/ttt");
                       });
                 }else{
 
@@ -422,8 +367,8 @@ router.get("/logout",redirectToLogin,(req,res)=>{
 
      req.logout();
      req.session.destroy();
-     res.send({status:"OK"});
-     //res.redirect("/login");
+    //  res.send({status:"OK"});
+     res.status(200).redirect("/login");
 });
    
 router.post("/logout",(req,res)=>{
